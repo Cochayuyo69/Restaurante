@@ -7,6 +7,9 @@ import Modelo.login;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -42,7 +45,12 @@ public class FrmLogin extends javax.swing.JFrame {
             if (contador == 100) {
                 tiempo.stop();
                 if (barra.getValue() == 100) {
-                    Sistema sis = new Sistema(lg);
+                    Sistema sis = null;
+                    try {
+                        sis = new Sistema(lg);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(FrmLogin.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     sis.setVisible(true);
                     dispose();
                 }

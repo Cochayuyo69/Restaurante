@@ -13,6 +13,22 @@ public class PlatoProductoDAO {
 
     public static void guardarPlatoProducto(PlatoProducto pp) throws SQLException {
         con = Conexion.getConnection();
+
+        // Verificar si ya existe la combinación plato-producto
+        String verificarSql = "SELECT COUNT(*) FROM Plato_Producto WHERE id_plato = ? AND id_producto = ?";
+        try (PreparedStatement verificarStmt = con.prepareStatement(verificarSql)) {
+            verificarStmt.setInt(1, pp.getIdPlato());
+            verificarStmt.setInt(2, pp.getIdProducto());
+
+            ResultSet rs = verificarStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                con.close();
+                System.out.println("La relación ya existe. No se insertó duplicado.");
+                return;
+            }
+        }
+
+        // Si no existe, insertar normalmente
         String sql = "INSERT INTO Plato_Producto (id_plato, id_producto, cantidad) VALUES (?, ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, pp.getIdPlato());
@@ -83,30 +99,32 @@ public class PlatoProductoDAO {
         return pp;
     }
 
-    public static String[][] obtenerTodosPlatoProducto() throws SQLException {
+    public static ArrayList<PlatoProducto> obtenerPlatoProductosPorIdPlato(int idPlato) {
+        ArrayList<PlatoProducto> lista = new ArrayList<>();
         con = Conexion.getConnection();
-        String sql = "SELECT * FROM Plato_Producto";
-        try (PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
 
-            ArrayList<String[]> lista = new ArrayList<>();
+        String sql = "SELECT pp.id_plato_producto, pp.id_plato, pp.id_producto, pp.cantidad " +
+                     "FROM Plato_Producto pp " +
+                     "WHERE pp.id_plato = ?";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idPlato);
+            ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
-                String[] fila = new String[4];
-                fila[0] = String.valueOf(rs.getInt("id_plato_producto"));
-                fila[1] = String.valueOf(rs.getInt("id_plato"));
-                fila[2] = String.valueOf(rs.getInt("id_producto"));
-                fila[3] = String.valueOf(rs.getDouble("cantidad"));
-                lista.add(fila);
+                PlatoProducto pp = new PlatoProducto(
+                    rs.getInt("id_plato_producto"),
+                    rs.getInt("id_plato"),
+                    rs.getInt("id_producto"),
+                    rs.getDouble("cantidad")
+                );
+                lista.add(pp);
             }
-
-            String[][] datos = new String[lista.size()][4];
             con.close();
-            JOptionPane.showMessageDialog(null, "Relaciones Cargadas Correctamente");
-            return lista.toArray(datos);
-        } catch (SQLException x) {
-            System.out.println(x.toString());
-            JOptionPane.showMessageDialog(null, "Error al Cargar Plato-Producto");
+        } catch (SQLException e) {
+            System.out.println("Error al obtener PlatoProducto por idPlato: " + e);
         }
-        return null;
+
+        return lista;
     }
 }

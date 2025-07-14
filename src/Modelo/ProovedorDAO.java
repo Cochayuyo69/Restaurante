@@ -4,8 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 public class ProovedorDAO {
 
@@ -151,5 +154,38 @@ public class ProovedorDAO {
             JOptionPane.showMessageDialog(null, "Error Proveedor No Encontrado");
         }
         return id;
+    }
+    
+    public static void CargarTablaProveedores(JTable tblProv) {
+        con = Conexion.getConnection();
+        DefaultTableModel model = new DefaultTableModel(
+            null,
+            new String[]{"ID", "Nombre", "Teléfono", "Email", "Dirección", "Fecha Registro", "Precio", "ID Producto"}
+        );
+
+        try (Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM Proveedores")) {
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getInt("id_proveedor"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono"),
+                    rs.getString("email"),
+                    rs.getString("direccion"),
+                    rs.getTimestamp("fecha_registro"),
+                    rs.getDouble("precio"),
+                    rs.getInt("id_producto")
+                });
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al llenar la tabla proveedores: " + e);
+        }
+
+        tblProv.setModel(model);
+        // Ocultar la columna ID
+        tblProv.getColumnModel().getColumn(0).setMinWidth(0);
+        tblProv.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblProv.getColumnModel().getColumn(0).setWidth(0);
     }
 }

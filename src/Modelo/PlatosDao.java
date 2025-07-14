@@ -118,7 +118,7 @@ public class PlatosDao {
         }
     }
     
-    public static Integer obtenerIdPlatoPorNombre(String nombre) throws SQLException {
+    public static Integer obtenerIdPlatoPorNombre(String nombre){
         con = Conexion.getConnection();
         String sql = "SELECT id FROM platos WHERE nombre = ?";
         Integer id = null;

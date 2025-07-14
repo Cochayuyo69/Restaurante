@@ -1,18 +1,21 @@
 package Modelo;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 public class ProductoDAO {
 
     static Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
 
     public static void guardarProducto(Producto p) throws SQLException {
         con = Conexion.getConnection();
@@ -97,7 +100,7 @@ public class ProductoDAO {
                     );
                 }
                 con.close();
-                JOptionPane.showMessageDialog(null, "Producto Encontrado Correctamente");
+                JOptionPane.showMessageDialog(null, "Producto Encontrado Correctamente: "+p.getNombre().trim());
                 return p;
         }catch(SQLException x){
             System.out.println(x.toString());
@@ -139,7 +142,7 @@ public class ProductoDAO {
         return null;
     }
     
-    public static Integer obtenerIdProductoPorNombre(String nombre) throws SQLException {
+    public static Integer obtenerIdProductoPorNombre(String nombre){
         con = Conexion.getConnection();
         String sql = "SELECT id_producto FROM Productos WHERE nombre = ?";
         Integer id = null;
@@ -197,4 +200,35 @@ public class ProductoDAO {
             return null;
         }
     }
+    public static void CargarTablaProductos(JTable tblProd) {
+        con = Conexion.getConnection();
+        DefaultTableModel model = new DefaultTableModel(
+            null,
+            new String[]{"ID", "nombre", "descripcion", "unidadMedida", "stock", "fechaActual"}
+        );
+
+        try (Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM Productos")) {
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getInt(1),
+                    rs.getString(2),
+                    rs.getString(3),
+                    rs.getString(4),
+                    rs.getInt(5),
+                    rs.getTimestamp(6)
+                });
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al llenar la tabla productos: " + e);
+        }
+
+        tblProd.setModel(model);                          // ← clave
+        // Ocultar la columna ID
+        tblProd.getColumnModel().getColumn(0).setMinWidth(0);
+        tblProd.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblProd.getColumnModel().getColumn(0).setWidth(0);
+    }
+    
 }
